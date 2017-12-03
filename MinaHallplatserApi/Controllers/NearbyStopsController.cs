@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MinaHallplatserApi.Helpers;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -14,56 +15,52 @@ namespace MinaHallplatserApi.Controllers
     [Route("api/vasttrafik")]
     public class NearbyStopsController : Controller
     {
+        public string AccessToken { get; private set; }
+
+        private async Task<HttpResponseMessage> DoGpsRequestAsync(string AccessToken, string Latitude, string Longitude)
+        {
+            HttpClient client = new HttpClient();
+            var uri = $"https://api.vasttrafik.se/bin/rest.exe/v2/location.nearbystops?originCoordLat={Latitude}&originCoordLong={Longitude}&format=json";
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Add("Authorization", "Bearer " + AccessToken);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            // Skicka request
+            return await client.GetAsync(uri);
+    }
+
         [HttpPost("gps")]
-        public async Task<IActionResult> GetGpsAsync(string latitude, string longitude, string access_token)
+        public async Task<IActionResult> GetGpsAsync(string latitude, string longitude)
         {
             try
             {
-                string date = DateTime.Now.ToString("yyyy-MM-dd");
-                string time = DateTime.Now.ToString("HH:mm");
-
-                HttpClient client = new HttpClient();
-                var uri = $"https://api.vasttrafik.se/bin/rest.exe/v2/location.nearbystops?originCoordLat={latitude}&originCoordLong={longitude}&format=json";
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Add("Authorization", "Bearer " + access_token);
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                // Skicka request
-                var response = await client.GetAsync(uri);
-                if (response.StatusCode != HttpStatusCode.OK)
+                if (Request.Headers.Keys.Contains("access_token"))
                 {
-                    if (response.StatusCode == HttpStatusCode.Unauthorized)
-                    {
-                        throw new UnauthorizedAccessException();
-                    }
-                    else
-                    {
-                        throw new HttpRequestException();
-                    }
+                    AccessToken = Request.Headers["access_token"];
                 }
                 else
                 {
-                    var responseBody = await response.Content.ReadAsStringAsync();
-                    var jsonData = JsonConvert.DeserializeObject<NearByStopsObject>(responseBody);
-                    //jsonData.LocationList.StopLocation.RemoveAll(x => x.Track != null);
-
-                    var stops = new List<StopLocation>(jsonData.LocationList.StopLocation);
-                    stops.RemoveAll(x => x.Track != null);
-
-                    return Ok(value: new
-                    {
-                        data = stops,
-                        timestamp = DateTime.Now
-                    });
+                    return BadRequest(new { error = "access_token missing or invalid." });
                 }
+
+                var response = await DoGpsRequestAsync(AccessToken, latitude, longitude);
+                HttpRequestHelper.ThrowIfNotOk(response);
+                var responseBody = await response.Content.ReadAsStringAsync();
+                var jsonData = JsonConvert.DeserializeObject<NearByStopsObject>(responseBody);
+
+                var stops = new List<StopLocation>(jsonData.LocationList.StopLocation);
+                stops.RemoveAll(x => x.Track != null);
+
+                return Ok(value: new
+                {
+                    data = stops,
+                    timestamp = DateTime.Now
+                });
+                
             }
             catch (UnauthorizedAccessException)
             {
-                return Unauthorized();
-            }
-            catch (HttpRequestException)
-            {
-                return StatusCode(500);
+                return BadRequest(new { error = "access_token missing or invalid." });
             }
             catch (Exception ex)
             {

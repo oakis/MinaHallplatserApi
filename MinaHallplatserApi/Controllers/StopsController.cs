@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MinaHallplatserApi.Helpers;
 using MinaHallplatserApi.Models;
 using Newtonsoft.Json;
 using System;
@@ -14,59 +15,57 @@ namespace MinaHallplatserApi.Controllers
     [Route("api/vasttrafik")]
     public class StopsController : Controller
     {
+        public string AccessToken { get; private set; }
+
+        public static async Task<HttpResponseMessage> DoStopsRequestAsync(string AccessToken, string Search)
+        {
+            // Skapa request
+            HttpClient client = new HttpClient();
+            var uri = new Uri($"https://api.vasttrafik.se/bin/rest.exe/v2/location.name?input={Search}&format=json");
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Add("Authorization", "Bearer " + AccessToken);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            // Returnera response
+            return await client.GetAsync(uri);
+        }
+
         [HttpPost("stops")]
-        public async Task<IActionResult> GetStopsAsync(string busStop, string access_token)
+        public async Task<IActionResult> GetStopsAsync(string Search)
         {
             try {
-                string date = DateTime.Now.ToString("yyyy-MM-dd");
-                string time = DateTime.Now.ToString("HH:mm");
 
-                // Skapa request
-                HttpClient client = new HttpClient();
-                var uri = new Uri($"https://api.vasttrafik.se/bin/rest.exe/v2/location.name?input={busStop}&format=json");
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Add("Authorization", "Bearer " + access_token);
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                // Skicka request
-                var response = await client.GetAsync(uri);
-                if (response.StatusCode != HttpStatusCode.OK)
+                if (Request.Headers.Keys.Contains("access_token"))
                 {
-                    if (response.StatusCode == HttpStatusCode.Unauthorized)
-                    {
-                        throw new UnauthorizedAccessException();
-                    }
-                    else
-                    {
-                        throw new HttpRequestException();
-                    }
+                    AccessToken = Request.Headers["access_token"];
                 }
                 else
                 {
-                    var responseBody = await response.Content.ReadAsStringAsync();
-                    var jsonData = JsonConvert.DeserializeObject<StopsObject>(responseBody);
-                    if (jsonData.LocationList.StopLocation == null)
-                        return NotFound(value: new { data = "Hittade inga hållplatser. Prova att söka på något annat.", timestamp = DateTime.Now });
-
-                    var stops = new List<StopLocation>(jsonData.LocationList.StopLocation);
-                    stops.RemoveAll(s => s.Name.StartsWith("."));
-                    if (stops.Count > 10)
-                        stops.RemoveRange(10, stops.Count - 10);
-
-                    return Ok(value: new
-                    {
-                        data = stops,
-                        timestamp = DateTime.Now
-                    });
+                    return BadRequest(new { error = "access_token missing or invalid." });
                 }
+
+                var response = await DoStopsRequestAsync(AccessToken, Search);
+                HttpRequestHelper.ThrowIfNotOk(response);
+                string ResponseString = await response.Content.ReadAsStringAsync();
+                var jsonData = JsonConvert.DeserializeObject<StopsObject>(ResponseString);
+                if (jsonData.LocationList.StopLocation == null)
+                    return NotFound(value: new { data = "Hittade inga hållplatser. Prova att söka på något annat.", timestamp = DateTime.Now });
+
+                var stops = new List<StopLocation>(jsonData.LocationList.StopLocation);
+                stops.RemoveAll(s => s.Name.StartsWith("."));
+                if (stops.Count > 10)
+                    stops.RemoveRange(10, stops.Count - 10);
+
+                return Ok(value: new
+                {
+                    data = stops,
+                    timestamp = DateTime.Now
+                });
+                
             }
             catch (UnauthorizedAccessException)
             {
-                return Unauthorized();
-            }
-            catch (HttpRequestException)
-            {
-                return StatusCode(500);
+                return BadRequest(new { error = "access_token missing or invalid." });
             }
             catch (Exception ex)
             {

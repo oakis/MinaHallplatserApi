@@ -62,6 +62,8 @@ namespace MinaHallplatserApi.Models
         public class DepartureBoard
         {
             public List<Departure> Departure { get; set; }
+            public string Error { get; set; }
+            public string ErrorText { get; set; }
         }
 
         public class DepartureObject
