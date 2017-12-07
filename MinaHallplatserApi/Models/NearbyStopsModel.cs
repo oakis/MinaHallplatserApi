@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using MinaHallplatserApi.Helpers;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +29,7 @@ namespace MinaHallplatserApi.Models
             public string servertime { get; set; }
             [JsonIgnore]
             public string serverdate { get; set; }
+            [JsonConverter(typeof(StopLocationConverter))]
             public List<StopLocation> StopLocation { get; set; }
         }
 

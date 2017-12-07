@@ -1,11 +1,12 @@
-﻿using Newtonsoft.Json;
+﻿using MinaHallplatserApi.Helpers;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace MinaHallplatserApi.Models
 {
-    public class DepartureModel
+    public static class DepartureModel
     {
         public class Departure
         {
@@ -61,6 +62,7 @@ namespace MinaHallplatserApi.Models
 
         public class DepartureBoard
         {
+            [JsonConverter(typeof(DepartureConverter))]
             public List<Departure> Departure { get; set; }
             public string Error { get; set; }
             public string ErrorText { get; set; }
