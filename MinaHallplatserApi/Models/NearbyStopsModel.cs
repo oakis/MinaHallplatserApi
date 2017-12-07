@@ -29,7 +29,6 @@ namespace MinaHallplatserApi.Models
             public string servertime { get; set; }
             [JsonIgnore]
             public string serverdate { get; set; }
-            [JsonConverter(typeof(StopLocationConverter))]
             public List<StopLocation> StopLocation { get; set; }
         }
 
