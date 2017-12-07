@@ -66,7 +66,8 @@ namespace MinaHallplatserApi.Controllers
                     }
                 }
                 
-                List<Departure> departures = new List<Departure>(jsonData.DepartureBoard.Departure);
+                List<Departure> data = new List<Departure>(jsonData.DepartureBoard.Departure);
+                var departures = data.OrderBy(x => x.TimeLeft).ToList();
                 List<Departure> returnValue = new List<Departure>();
 
                 for (var i = 0; i < departures.Count; i++)
@@ -80,17 +81,7 @@ namespace MinaHallplatserApi.Controllers
                         var index = returnValue.FindIndex(departure => departure.Name == departures[i].Name && departure.Direction == departures[i].Direction);
                         if (index != -1 && returnValue[index].TimeNext == null)
                         {
-                            var timeLeft = returnValue[index].TimeLeft;
-                            var timeNext = returnValue[index].TimeNext;
-                            if (timeLeft > timeNext)
-                            {
-                                returnValue[index].TimeLeft = timeNext;
-                                returnValue[index].TimeNext = timeLeft;
-                            }
-                            else
-                            {
-                                returnValue[index].TimeNext = departures[i].TimeLeft;
-                            }
+                            returnValue[index].TimeNext = departures[i].TimeLeft;
                         }
                         else if (index == -1)
                         {
@@ -101,7 +92,7 @@ namespace MinaHallplatserApi.Controllers
 
 
                 return Ok(value: new {
-                    departures = returnValue.OrderBy(x => x.TimeLeft).ThenBy(x => x.TimeNext),
+                    departures = returnValue,
                     timestamp = DateTime.Now
                 });
             }
