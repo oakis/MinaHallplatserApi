@@ -48,8 +48,10 @@ namespace MinaHallplatserApi.Controllers
                 var responseBody = await response.Content.ReadAsStringAsync();
                 var jsonData = JsonConvert.DeserializeObject<NearByStopsObject>(responseBody);
 
-                var stops = new List<StopLocation>(jsonData.LocationList.StopLocation);
-                stops.RemoveAll(x => x.Track != null);
+                if (jsonData.LocationList.StopLocation == null)
+                    return NotFound("Kunde inte hitta några hållplatser nära dig.");
+				var stops = new List<StopLocation>(jsonData.LocationList.StopLocation);
+				stops.RemoveAll(x => x.Track != null);
 
                 return Ok(value: new
                 {
