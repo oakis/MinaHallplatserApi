@@ -82,6 +82,7 @@ namespace MinaHallplatserApi.Controllers
                         if (index != -1 && returnValue[index].TimeNext == null)
                         {
                             returnValue[index].TimeNext = departures[i].TimeLeft;
+                            returnValue[index].ClockNext = departures[i].ClockLeft;
                         }
                         else if (index == -1)
                         {

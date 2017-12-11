@@ -51,6 +51,8 @@ namespace MinaHallplatserApi.Models
             public bool IsLive => _rtTime == null ? false : true;
             public int? TimeLeft { get => _rtTime == null ? GetMinutesUntil(_date, _time) : GetMinutesUntil(_rtDate, _rtTime); set => _timeLeft = value; }
             public int? TimeNext { get; set; }
+            public string ClockLeft { get => _rtTime == null ? _time : _rtTime; }
+            public string ClockNext { get; set; }
         }
 
         public static int? GetMinutesUntil(string Date, string Time)
