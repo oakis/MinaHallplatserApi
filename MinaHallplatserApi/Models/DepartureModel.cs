@@ -59,7 +59,7 @@ namespace MinaHallplatserApi.Models
         {
             DateTime time = DateTime.Parse(Date + " " + Time);
             TimeSpan span = time - DateTime.Now;
-            return span.Minutes + 1;
+            return Convert.ToInt32(span.TotalMinutes + 1);
         }
 
         public class DepartureBoard
