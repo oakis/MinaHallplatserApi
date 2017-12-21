@@ -31,7 +31,6 @@ namespace MinaHallplatserApi.Models
             public string Via => !string.IsNullOrEmpty(_direction) && _direction.Contains(" via ") ? _direction.Substring(_direction.IndexOf(" via ") + 1) : null;
             public string Name { get; set; }
             public string Sname { get; set; }
-            [JsonIgnore]
             public string Type { get; set; }
             [JsonIgnore]
             public string Stopid { get; set; }
