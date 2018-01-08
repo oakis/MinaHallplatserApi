@@ -55,6 +55,8 @@ namespace MinaHallplatserApi.Controllers
                 stops.RemoveAll(s => s.Name.StartsWith("."));
                 if (stops.Count > 10)
                     stops.RemoveRange(10, stops.Count - 10);
+                if (stops.Count == 0)
+                    return NotFound(value: new { data = "Hittade inga hållplatser. Prova att söka på något annat.", timestamp = DateTime.Now });
 
                 return Ok(value: new
                 {
