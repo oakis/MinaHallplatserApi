@@ -52,6 +52,7 @@ namespace MinaHallplatserApi.Models
             public int? TimeNext { get; set; }
             public string ClockLeft { get => _rtTime == null ? _time : _rtTime; }
             public string ClockNext { get; set; }
+            public bool Night { get; set; }
         }
 
         public static int? GetMinutesUntil(string Date, string Time)
