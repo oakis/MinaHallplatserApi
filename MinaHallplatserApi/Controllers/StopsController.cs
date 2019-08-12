@@ -31,48 +31,6 @@ namespace MinaHallplatserApi.Controllers
         }
 
         [HttpPost("stops")]
-        public async Task<IActionResult> GetStopsAsync(string Search)
-        {
-            try {
-
-                if (Request.Headers.Keys.Contains("access_token"))
-                {
-                    AccessToken = Request.Headers["access_token"];
-                }
-                else
-                {
-                    return BadRequest(new { error = "access_token missing or invalid." });
-                }
-
-                var response = await DoStopsRequestAsync(AccessToken, Search);
-                HttpRequestHelper.ThrowIfNotOk(response);
-                string ResponseString = await response.Content.ReadAsStringAsync();
-                var jsonData = JsonConvert.DeserializeObject<StopsObject>(ResponseString);
-                if (jsonData.LocationList.StopLocation == null)
-                    return NotFound(value: new { data = "Hittade inga hållplatser. Prova att söka på något annat.", timestamp = DateTime.Now });
-
-                var stops = new List<StopLocation>(jsonData.LocationList.StopLocation);
-                stops.RemoveAll(s => s.Name.StartsWith("."));
-                if (stops.Count > 10)
-                    stops.RemoveRange(10, stops.Count - 10);
-                if (stops.Count == 0)
-                    return NotFound(value: new { data = "Hittade inga hållplatser. Prova att söka på något annat.", timestamp = DateTime.Now });
-
-                return Ok(value: new
-                {
-                    data = stops,
-                    timestamp = DateTime.Now
-                });
-                
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return BadRequest(new { error = "access_token missing or invalid." });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex);
-            }
-        }
+        public async Task<IActionResult> GetStopsAsync(string Search) => BadRequest(new { error = "Please update Mina Hållplatser to the latest version." });
     }
 }

@@ -30,44 +30,6 @@ namespace MinaHallplatserApi.Controllers
     }
 
         [HttpPost("gps")]
-        public async Task<IActionResult> GetGpsAsync(string latitude, string longitude)
-        {
-            try
-            {
-                if (Request.Headers.Keys.Contains("access_token"))
-                {
-                    AccessToken = Request.Headers["access_token"];
-                }
-                else
-                {
-                    return BadRequest(new { error = "access_token missing or invalid." });
-                }
-
-                var response = await DoGpsRequestAsync(AccessToken, latitude, longitude);
-                HttpRequestHelper.ThrowIfNotOk(response);
-                var responseBody = await response.Content.ReadAsStringAsync();
-                var jsonData = JsonConvert.DeserializeObject<NearByStopsObject>(responseBody);
-
-                if (jsonData.LocationList.StopLocation == null)
-                    return NotFound("Kunde inte hitta några hållplatser nära dig.");
-				var stops = new List<StopLocation>(jsonData.LocationList.StopLocation);
-				stops.RemoveAll(x => x.Track != null);
-
-                return Ok(value: new
-                {
-                    data = stops,
-                    timestamp = DateTime.Now
-                });
-                
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return BadRequest(new { error = "access_token missing or invalid." });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex);
-            }
-        }
+        public async Task<IActionResult> GetGpsAsync(string latitude, string longitude) => BadRequest(new { error = "Please update Mina Hållplatser to the latest version." });
     }
 }
